@@ -1,0 +1,25 @@
+# Vivado build / temp
+*.jou
+*.log
+*.str
+*.wdb
+*.rpt
+*.dcp
+*.html
+*.backup.jou
+*.backup.log
+
+# Vivado project-generated dirs
+*.cache/
+*.hw/
+*.ip_user_files/
+*.sim/
+*.runs/
+*.Xil/
+*.sdk/
+
+# Bitstreams & debug
+*.bit
+*.bin
+*.ltx
+
