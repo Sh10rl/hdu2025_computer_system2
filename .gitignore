@@ -1,25 +1,45 @@
-# Vivado build / temp
+# =============================================================
+#  Vivado Project .gitignore
+# =============================================================
+
+# --- 1. Vivado Internal "Junk" Folders ---
+.Xil/
+*.cache/
+*.runs/
+*.sim/
+*.ip_user_files/
+*.hw/
+*.sdk/
+
+# --- 2. Simulation Files (CRITICAL) ---
+*.vcd
+*.wdb
+*.wcfg.bak
+xsim.dir/
+*.pb
+
+# --- 3. Log and Journal Files ---
 *.jou
 *.log
 *.str
-*.wdb
 *.rpt
-*.dcp
-*.html
-*.backup.jou
-*.backup.log
+webtalk*
+hs_err_pid*
 
-# Vivado project-generated dirs
-*.cache/
-*.hw/
-*.ip_user_files/
-*.sim/
-*.runs/
-*.Xil/
-*.sdk/
-
-# Bitstreams & debug
+# --- 4. Output Binary Files ---
 *.bit
 *.bin
-*.ltx
+*.dcp
+*.mcs
 
+# --- 5. OS and Editor Files ---
+.DS_Store
+.vscode/
+*.swp
+
+# =============================================================
+#  NOTES:
+#  1. This keeps '*.srcs/' (Your Code)
+#  2. This keeps '*.xpr' (Your Project Settings)
+#  3. This keeps '*.coe' (Your Instruction Memory)
+# =============================================================
