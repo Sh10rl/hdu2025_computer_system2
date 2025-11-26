@@ -2,7 +2,7 @@
 
 ## **仿真结果**
 
-![image (5)](./../assets/img/lab_report_7_4/image_1.png)
+![image_1](./../assets/img/lab_report_7_4/image_1.png)
 
 ## RTL电路图
 

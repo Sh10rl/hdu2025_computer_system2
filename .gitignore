@@ -37,6 +37,9 @@ hs_err_pid*
 .vscode/
 *.swp
 
+# --- 6. VSCode ---
+*.code-workspace
+
 # =============================================================
 #  NOTES:
 #  1. This keeps '*.srcs/' (Your Code)
