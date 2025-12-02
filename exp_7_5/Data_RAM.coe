@@ -1,0 +1,18 @@
+memory_initialization_radix = 16;
+memory_initialization_vector = 
+11111111, 
+22222222, 
+33333333, 
+44444444, 
+00000005, 
+00000006, 
+deadbeef, 
+cafebabe,
+54778c89,
+deadbed5,
+55554444,
+66887744,
+aa445500,
+55bbaa55,
+5da6cb87,
+bb478acf;
