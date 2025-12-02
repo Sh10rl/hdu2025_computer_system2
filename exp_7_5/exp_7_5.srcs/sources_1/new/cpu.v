@@ -5,8 +5,8 @@ module CPU (
     input         reset,
     output [31:0] F,     
     output [31:0] inst,
-    output [31:0] data_mem_a,   // 对应图中的 data_mem_a (即 F)
-    output [31:0] data_mem_spo,  // 对应图中的 data_mem_spo  
+    output [31:0] data_mem_a,  
+    output [31:0] data_mem_spo, 
     output        ZF,    
     output        OF     
 );
@@ -28,10 +28,10 @@ module CPU (
     wire [31:0] ALU_A;
     wire [31:0] ALU_B;
     
-    wire        mem_wen;      // 来自 Decoder
-    wire        mem_to_reg;   // 来自 Decoder
-    wire [31:0] mem_rdata;     // 内存读出的数据
-    wire [31:0] wb_data;      // 最终写回寄存器堆的数据
+    wire        mem_wen;      
+    wire        mem_to_reg;   
+    wire [31:0] mem_rdata;   
+    wire [31:0] wb_data;    
 
     fetch_unit u_fetch (
         .clock (clock),
@@ -79,11 +79,10 @@ module CPU (
     assign wb_data = mem_to_reg ? mem_rdata : F;
 
     assign ALU_A = src1_ren ? src1_rdata : 
-                   (inst[6:0] == 7'b0110111) ? 32'b0 : pc; // 三目运算符实现Multiplexer
+                   (inst[6:0] == 7'b0110111) ? 32'b0 : pc;
 
     assign ALU_B = (src2_ren && !mem_wen) ? src2_rdata : imm;
     
-    // 新增输出. 用于后续的显示
     assign data_mem_a = F; 
     assign data_mem_spo = mem_rdata;
 

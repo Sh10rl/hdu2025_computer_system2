@@ -9,73 +9,85 @@ module tb_top;
     reg [1:0] sw;
 
     // Outputs
-    wire [31:0] inst_mem_spo;
-    wire [31:0] F;
-    wire [31:0] data_mem_a;
-    wire [31:0] data_mem_spo;
     wire [1:0]  led;
     wire [2:0]  which;
     wire [7:0]  seg;
+    wire        which_en;
 
-    // 实例化 Top 模块
+    // Internal probes, ordered like cpu_tb.v (4-17)
+    wire [31:0] tb_pc        = uut.u_cpu.pc;
+    wire [31:0] tb_inst      = uut.inst;
+    wire [31:0] tb_alu_a     = uut.u_cpu.ALU_A;
+    wire [31:0] tb_alu_b     = uut.u_cpu.ALU_B;
+    wire [3:0]  tb_alu_op    = uut.u_cpu.ALU_OP;
+    wire [31:0] tb_F         = uut.F;
+    wire [31:0] tb_regs [0:31] = uut.u_cpu.u_regfile.registers;
+    wire        tb_OF        = uut.u_cpu.OF;
+    wire        tb_ZF        = uut.u_cpu.ZF;
+    wire [31:0] tb_mem_wdata = uut.u_cpu.src2_rdata; // data memory input (write data)
+    wire [31:0] tb_mem_rdata = uut.data_mem_spo;     // data memory output (read data)
+
+    // Instantiate top module
     top uut (
         .clock(clock), 
-        .board_clk(board_clk), 
         .reset(reset), 
         .sw(sw), 
-        .inst_mem_spo(inst_mem_spo), 
-        .F(F), 
-        .data_mem_a(data_mem_a), 
-        .data_mem_spo(data_mem_spo), 
+        .board_clk(board_clk), 
         .led(led), 
         .which(which), 
-        .seg(seg)
+        .seg(seg),
+        .which_en(which_en)
     );
 
-    // 时钟生成 (10ns 周期)
+    // Clocks (10ns period)
     initial begin
         clock = 0;
         forever #5 clock = ~clock;
     end
-    
+
     initial begin
         board_clk = 0;
         forever #5 board_clk = ~board_clk;
     end
 
-    // --- 【核心修改：打印输出日志】 ---
+    integer cycle;
+
+    // --- Logging and waveform ---
     initial begin
-        // 打印表头
-        $display("\n=======================================================================================");
-        $display("|   Time(ns)  |  Instruction (Hex) |  ALU_Result/Addr (Hex) |  Mem_Read_Data (Hex) |");
-        $display("=======================================================================================");
+        cycle = 0;
+        $dumpfile("top_sim.vcd");
+        $dumpvars(0, tb_top);
+        $display("\n==============================================================================================================================");
+        $display("| Cycle |    PC    | Instruction |     ALU_A     |     ALU_B     |     F      | OP | ZF OF |  Mem_Din   |  Mem_Dout  |");
+        $display("==============================================================================================================================");
     end
 
-    // 在时钟下降沿采样并打印 (此时信号最稳定)
-    always @(negedge clock) begin
-        if (!reset) begin // 复位结束后才开始打印
-            // %t: 时间, %h: 16进制
-            $display("|  %5t ns   |      %8h      |        %8h        |       %8h       |", 
-                     $time, inst_mem_spo, data_mem_a, data_mem_spo);
+    always @(posedge clock) begin
+        if (reset) begin
+            cycle <= 0;
+        end else begin
+            $display("|  %02d  | %8h |   %8h  | %10h | %10h | %10h | %1h  |  %b  %b | %10h | %10h |",
+                     cycle, tb_pc, tb_inst, tb_alu_a, tb_alu_b, tb_F, tb_alu_op, tb_ZF, tb_OF,
+                     tb_mem_wdata, tb_mem_rdata);
+            cycle <= cycle + 1;
         end
     end
-    // ------------------------------------
+    // -----------------
 
-    // 测试流程
+    // Test sequence
     initial begin
-        // 初始化
+        // init
         reset = 1;
-        sw = 0;
-        #20; // 复位 20ns
+        sw = 2'b00;
+        #20; // hold reset 20ns
         
-        reset = 0; // 释放复位, CPU 开始运行
+        reset = 0; // release reset
         
-        // 你的代码大约有 11 条指令，每条 10ns
-        // 运行 150ns 足够跑完所有指令并看到结果
+        // run long enough to cover program
         #150; 
         
         $display("=======================================================================================\n");
-        $stop; // 停止仿真
+        $stop; // 鍋滄浠跨湡
     end
 
 endmodule

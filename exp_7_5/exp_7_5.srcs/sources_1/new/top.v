@@ -1,54 +1,56 @@
 `timescale 1ns / 1ps
 
 module top (
-    input         clock,
-    input         board_clk,
-    input         reset,
-    input  [1:0]  sw, // 修改为两个开关
+    input        clock,
+    input        reset,
+    input  [1:0] sw,
+    input        board_clk,
 
-    output [31:0] inst_mem_spo,
-    output [31:0] F,
-    output [31:0] data_mem_a,   // 数据存储器地址
-    output [31:0] data_mem_spo, // 数据存储器读出数据
-    output [1:0]  led,
+    // OF ZF
+    output [1:0] led,
 
     output [2:0]  which,
-    output [7:0]  seg
+    output [7:0]  seg,
+    output        enable
 );
 
     wire [31:0] inst;
+    wire [31:0] F;
+    wire [31:0] data_mem_a;
+    wire [31:0] data_mem_spo;
     wire        ZF;
     wire        OF;
-    reg [31:0] data; // 改为 reg, 方便后续用 case
+    reg  [31:0] display_data;
 
     CPU u_cpu (
         .clock (clock),
         .reset (reset),
         .F     (F),
         .inst  (inst),
-        // 绑定新输出
         .data_mem_a   (data_mem_a),
         .data_mem_spo (data_mem_spo),
         .ZF    (ZF),
         .OF    (OF)
     );
 
-    assign inst_mem_spo = inst;
     assign led = {OF, ZF};
+
     always @(*) begin
         case (sw)
-            2'b00: data = inst;         
-            2'b01: data = data_mem_a;   
-            2'b10: data = data_mem_spo;
-            2'b11: data = F;           
-            default: data = inst;
+            2'b00: display_data = inst;         // instruction word
+            2'b01: display_data = data_mem_a;   // data memory address
+            2'b10: display_data = data_mem_spo; // data memory read data
+            2'b11: display_data = F;            // ALU result
+            default: display_data = inst;
         endcase
     end
 
     Display u_display (
         .clk        (board_clk),
-        .data       (data),
+        .data       (display_data),
         .which      (which),
         .seg        (seg)
     );
+
+    assign enable = 1'b1; // keep 3-8 decoder enable asserted
 endmodule

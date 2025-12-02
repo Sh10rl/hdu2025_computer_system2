@@ -11,9 +11,9 @@ module Decoder (
     output reg [31:0] imm,
     output        is_lui,
     output reg [3:0]  ALU_OP,
-    // ĞÂÔöÄÚ´æĞ´Ê¹ÄÜ, ÄÚ´æĞ´Èë¼Ä´æÆ÷Ê¹ÄÜ
-    output        mem_wen,      // ¿ØÖÆ ¼Ä´æÆ÷Êı¾İĞ´ÈëÄÚ´æ Ê¹ÄÜ(SW)
-    output        mem_to_reg    // ¿ØÖÆ ÄÚ´æÊı¾İĞ´Èë¼Ä´æÆ÷ Ê¹ÄÜ(LW)
+    // æ–°å¢å†…å­˜å†™ä½¿èƒ½, å†…å­˜å†™å…¥å¯„å­˜å™¨ä½¿èƒ½
+    output        mem_wen,      // æ§åˆ¶ å¯„å­˜å™¨æ•°æ®å†™å…¥å†…å­˜ ä½¿èƒ½(SW)
+    output        mem_to_reg    // æ§åˆ¶ å†…å­˜æ•°æ®å†™å…¥å¯„å­˜å™¨ ä½¿èƒ½(LW)
 );
 
     wire [6:0] opcode = inst[6:0];
@@ -28,8 +28,8 @@ module Decoder (
     localparam I_TYPE = 7'b0010011; // addi, slli, slti
     localparam LUI    = 7'b0110111;
     localparam AUIPC  = 7'b0010111;
-    localparam LW     = 7'b0000011; // lw [ĞÂÔö]
-    localparam SW     = 7'b0100011; // sw [ĞÂÔö]
+    localparam LW     = 7'b0000011; // lw [æ–°å¢]
+    localparam SW     = 7'b0100011; // sw [æ–°å¢]  æµ‹è¯•
 
     assign is_lui   = (opcode == LUI);
 
@@ -46,9 +46,9 @@ module Decoder (
     always @(*) begin
         if (opcode == LUI || opcode == AUIPC) begin
             imm = {inst[31:12], 12'b0}; 
-        end else if (opcode == I_TYPE || opcode == LW) begin // ĞÂÔö LW, ÊôÓÚ I ĞÍÖ¸Áî, Ö±½Ó¸´ÓÃ
+        end else if (opcode == I_TYPE || opcode == LW) begin // æ–°å¢ LW, å±äº I å‹æŒ‡ä»¤, ç›´æ¥å¤ç”¨
             imm = {{20{inst[31]}}, inst[31:20]}; 
-        end else if (opcode == SW) begin // ĞÂÔö SW, ÊôÓÚ S ĞÍÖ¸Áî, ĞèÒªÖØĞÂĞ´
+        end else if (opcode == SW) begin // æ–°å¢ SW, å±äº S å‹æŒ‡ä»¤, éœ€è¦é‡æ–°å†™
             imm = {{20{inst[31]}}, inst[31:25], inst[11:7]};
         end else begin
             imm = 32'b0; 
@@ -84,7 +84,7 @@ module Decoder (
                     default: ALU_OP = 4'b0000;
                 endcase
             end
-            LUI, AUIPC, SW, LW : begin // Ö±½Ó¸´ÓÃ ALU µÄ ADD
+            LUI, AUIPC, SW, LW : begin // ç›´æ¥å¤ç”¨ ALU çš„ ADD
                 ALU_OP = 4'b0000; // add (0 + imm); add (pc + imm)
             end
             default: ALU_OP = 4'b0000;

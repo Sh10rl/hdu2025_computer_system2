@@ -11,8 +11,9 @@ module ALU (
 
     assign ZF = (F == 32'b0);
 
-    assign OF = (ALU_OP == 4'b0000) ? (~(a[31] ^ b[31]) & (a[31] ^ F[31])) : // 正加正 -> 负
-                (ALU_OP == 4'b1000) ? ((a[31] ^ b[31]) & (a[31] ^ F[31])) : // 负减正 -> 正 | 正减负 -> 负
+    // Overflow flag: handle add/sub separately
+    assign OF = (ALU_OP == 4'b0000) ? (~(a[31] ^ b[31]) & (a[31] ^ F[31])) :
+                (ALU_OP == 4'b1000) ? ((a[31] ^ b[31]) & (a[31] ^ F[31])) :
                 1'b0;
 
     always @(*) begin

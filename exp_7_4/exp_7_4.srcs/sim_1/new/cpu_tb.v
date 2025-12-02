@@ -4,7 +4,7 @@ module cpu_tb;
 
     reg clock = 1'b0;
     reg reset = 1'b1;
-    
+
     wire [31:0] tb_pc     = dut.u_cpu.pc;
     wire [31:0] tb_inst_mem_spo = dut.inst_mem_spo;
     wire [31:0] tb_alu_a  = dut.u_cpu.ALU_A;
