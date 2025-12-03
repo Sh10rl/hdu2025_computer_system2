@@ -12,7 +12,7 @@ module tb_top;
     wire [1:0]  led;
     wire [2:0]  which;
     wire [7:0]  seg;
-    wire        which_en;
+    wire        enable;
 
     // Internal probes, ordered like cpu_tb.v (4-17)
     wire [31:0] tb_pc        = uut.u_cpu.pc;
@@ -36,7 +36,7 @@ module tb_top;
         .led(led), 
         .which(which), 
         .seg(seg),
-        .which_en(which_en)
+        .enable (enable)
     );
 
     // Clocks (10ns period)
