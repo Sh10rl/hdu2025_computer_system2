@@ -1,5 +1,7 @@
 `timescale 1ns / 1ps
 
+// 实验 7.6 单周期 CPU。
+// 在 7.5 基础上增加分支/跳转控制流。
 module CPU (
     input         clock,
     input         reset,
@@ -10,12 +12,13 @@ module CPU (
     output        ZF,    
     output        OF, 
 
-    //增加接口实现在top模块的输出
-    output [31:0] pc_next_out,  //来自fetch_unit的pc_next 
-    output [31:0] reg_wdata_out, //来自wb_data 
-    output [4:0] reg_waddr_out  //目标寄存器地址，来自decoder的reg_waddr 
+    // 导出到顶层用于显示/调试的观测信号
+    output [31:0] pc_next_out,
+    output [31:0] reg_wdata_out,
+    output [4:0] reg_waddr_out
 );
 
+    // 译码与控制信号
     wire [31:0] pc;
     wire [31:0] imm;
     wire [4:0]  src1_raddr;
@@ -27,35 +30,43 @@ module CPU (
     wire        is_lui;
     wire [3:0]  ALU_OP;
     
+    // 寄存器堆读数据
     wire [31:0] src1_rdata;
     wire [31:0] src2_rdata;
     
+    // ALU 输入操作数
     wire [31:0] ALU_A;
     wire [31:0] ALU_B;
     
+    // 访存控制与写回选择
     wire        mem_wen;      
     wire        mem_to_reg;   
     wire [31:0] mem_rdata;   
     wire [31:0] wb_data;    
+
+    // 取指模块导出的 next PC（转发到顶层输出）。
+    wire [31:0] pc_next;
     
-    //7.6 
+    // 控制流译码标志
     wire is_beq;
     wire is_bne;
     wire is_jal;
     wire is_jalr;
 
-    //组合信号判断 
+    // 控制流辅助组合信号
     wire is_link;
     wire is_jump_branch;
     wire is_jump;
     wire branch_taken;
 
-    //逻辑信号生成 
+    // JAL/JALR 需要把链接地址 PC+4 写入 rd。
     assign is_link = is_jal || is_jalr;
     assign is_jump = is_jal || is_jalr;
     assign is_jump_branch = is_jump || is_beq || is_bne;
     
-    //计算branch_taken beq 且ZF=1，或bne且ZF=0
+    // 分支是否成立：
+    // - BEQ 在 ZF=1 时跳转
+    // - BNE 在 ZF=0 时跳转
     assign branch_taken = (is_beq && ZF) || (is_bne && !ZF);
     fetch_unit u_fetch (
         .clock (clock),
@@ -69,7 +80,7 @@ module CPU (
 
         .inst  (inst),
         .pc    (pc),
-        .pc_next_out (pc_next_out)
+        .pc_next_out (pc_next)
     );
 
     Decoder u_decoder (
@@ -86,7 +97,7 @@ module CPU (
         .mem_wen    (mem_wen),
         .mem_to_reg (mem_to_reg),
         .ALU_OP     (ALU_OP),
-        //连接新输出 
+        // 控制流输出信号
         .is_beq     (is_beq),
         .is_bne     (is_bne),
         .is_jal     (is_jal),
@@ -113,21 +124,28 @@ module CPU (
         .spo (mem_rdata)   
     );
     
-    //写回数据选择修改，is_link (PC+4) > mem_to_reg(mem) > ALU(F) 用于写回链接指令的写回值。
+    // 写回优先级：
+    // is_link(PC+4) > mem_to_reg(内存读数) > ALU 结果。
     assign wb_data = is_link ? (pc + 4) : (mem_to_reg ? mem_rdata : F);
 
-    assign ALU_A = src1_ren ? src1_rdata : 
+    // ALU_A 选择：
+    // - 需要 rs1 时取寄存器值
+    // - LUI 取 0
+    // - AUIPC/JAL 相关路径取 PC
+    assign ALU_A = src1_ren ? src1_rdata :
                    (inst[6:0] == 7'b0110111) ? 32'b0 : pc;
-    // 对于 Branch 指令 (is_beq/is_bne)，ALU 需要比较两个寄存器，所以必须选 src2_rdata
-    // 对于 R-Type，选 src2_rdata
-    // 其他 (I-Type, SW, LUI, AUIPC, JAL) 选 imm
+
+    // ALU_B 选择：
+    // - 分支比较取 rs2
+    // - R 型取 rs2
+    // - 其他取立即数
     assign ALU_B = (is_beq || is_bne || (src2_ren && !mem_wen)) ? src2_rdata : imm;
     
     assign data_mem_a = F; 
     assign data_mem_spo = mem_rdata;
 
-    // 连接输出到CPU内部 
-    assign pc_next_out  = u_fetch.pc_next_out;
+    // 导出调试观测信号到顶层。
+    assign pc_next_out  = pc_next;
     assign reg_wdata_out = wb_data;
     assign reg_waddr_out = reg_waddr;
 

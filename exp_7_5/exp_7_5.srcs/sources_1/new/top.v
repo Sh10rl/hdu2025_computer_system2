@@ -1,12 +1,14 @@
 `timescale 1ns / 1ps
 
+// 实验 7.5 顶层集成模块。
+// 增加访存相关信号的可观测性（拨码选择显示内容）。
 module top (
     input        clock,
     input        reset,
     input  [1:0] sw,
     input        board_clk,
 
-    // OF ZF
+    // led[1]=OF, led[0]=ZF
     output [1:0] led,
 
     output [2:0]  which,
@@ -35,12 +37,14 @@ module top (
 
     assign led = {OF, ZF};
 
+    // 显示数据多路选择：
+    // 00 指令字，01 数据存储器地址，10 数据存储器读数，11 ALU 结果。
     always @(*) begin
         case (sw)
-            2'b00: display_data = inst;         // instruction word
-            2'b01: display_data = data_mem_a;   // data memory address
-            2'b10: display_data = data_mem_spo; // data memory read data
-            2'b11: display_data = F;            // ALU result
+            2'b00: display_data = inst;         // 指令字
+            2'b01: display_data = data_mem_a;   // 数据存储器地址
+            2'b10: display_data = data_mem_spo; // 数据存储器读数据
+            2'b11: display_data = F;            // ALU 结果
             default: display_data = inst;
         endcase
     end
@@ -52,5 +56,5 @@ module top (
         .seg        (seg)
     );
 
-    assign enable = 1'b1; // keep 3-8 decoder enable asserted
+    assign enable = 1'b1; // 保持 3-8 译码器使能有效
 endmodule

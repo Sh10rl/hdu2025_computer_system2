@@ -1,35 +1,39 @@
 `timescale 1ns / 1ps
 
+// 实验 7.6 取指模块。
+// 支持顺序执行、分支跳转、JAL/JALR 的 PC 更新。
 module fetch_unit (
   input  wire        clock,
-  input  wire        reset,        // High active reset
+  input  wire        reset,        // 高电平复位
   
-  //新增jmp相关接口 
-  input wire         branch_taken, // 是否有条件分支，根据ZF标志判断2
+  // 来自 CPU/译码器的控制流输入
+  input wire         branch_taken,
   input wire         is_jal,
-  input wire         is_jalr,// jump and link register signal
-  input wire  [31:0] imm,          // (偏移量)
-  input wire  [31:0] rs1_data,    // rs1寄存器数据，用于JALR
+  input wire         is_jalr,
+  input wire  [31:0] imm,
+  input wire  [31:0] rs1_data,
  
-  output wire [31:0] inst,         // Current instruction
-  output reg  [31:0] pc,            // Program Counter
-  output wire [31:0] pc_next_out    // Next Program Counter
+  output wire [31:0] inst,         // 当前指令
+  output reg  [31:0] pc,
+  output wire [31:0] pc_next_out
 );
 
   reg  [31:0] pc_next;
   assign pc_next_out = pc_next;
-  //更新pc_next逻辑，考虑跳转指令
-  always @(*) begin 
+
+  // 下一条 PC 选择优先级：
+  // 1) JALR，2) JAL 或分支成立，3) 顺序执行 PC+4。
+  always @(*) begin
     if (is_jalr) begin
-      //JALR:PC = (rs1+imm) & ~1 
-      pc_next = (rs1_data + imm) & ~32'b1; //即32'hffff_fffe 与地位与保证最低为清零实现对齐
+      // JALR：目标地址为 (rs1 + imm)，最低位强制清零。
+      pc_next = (rs1_data + imm) & ~32'b1;
     end
     else if (is_jal || branch_taken) begin
-      //JAL or branch taken: PC = PC + imm
+      // JAL 或分支成立：PC 相对跳转。
       pc_next = pc + imm;
     end
     else begin
-      //默认PC + 4 顺序执行
+      // 默认顺序执行。
       pc_next = pc + 4;
     end
   end
@@ -41,6 +45,7 @@ module fetch_unit (
         pc <= pc_next;
   end
 
+  // 指令按字对齐取值。
   Inst_ROM u_rom (
     .a   (pc[9:2]),      
     .spo (inst)

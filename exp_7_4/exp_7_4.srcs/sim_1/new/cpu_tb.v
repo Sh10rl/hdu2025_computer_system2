@@ -1,5 +1,7 @@
 `timescale 1ns / 1ps
 
+// 实验 7.4 顶层 CPU 测试平台。
+// 每个周期打印一行关键信息，便于人工核对。
 module cpu_tb;
 
     reg clock = 1'b0;
@@ -35,20 +37,24 @@ module cpu_tb;
         .led       (led)
     );
 
+    // 仿真时钟：100 MHz（周期 10ns）。
     always #5 clock = ~clock;
 
+    // 复位脉冲。
     initial begin
         reset = 1'b1;
         #20;
         reset = 1'b0;
     end
 
+    // 导出波形，便于在 GTKWave 中查看。
     initial begin
         $dumpfile("cpu_tb.vcd");
         $dumpvars(0, cpu_tb);
     end
 
     integer cycle;
+    // 主监视循环。
     initial begin
         @(negedge clock);
         for (cycle = 0; cycle < 40;) begin

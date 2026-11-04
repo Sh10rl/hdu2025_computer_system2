@@ -1,20 +1,22 @@
 `timescale 1ns / 1ps
 
+// 实验 7.6 顶层测试平台。
+// 重点验证 beq/bne/jal/jalr 控制流是否正确。
 module tb_top;
 
-    // Inputs
+    // 输入信号
     reg clock;
     reg board_clk;
     reg reset;
     reg [1:0] sw;
 
-    // Outputs
+    // 输出信号
     wire [1:0]  led;
     wire [2:0]  which;
     wire [7:0]  seg;
     wire        enable;
 
-    // Internal probes, ordered like cpu_tb.v (4-17)
+    // 内部观测信号（顺序与 7.4 的 cpu_tb 基本一致）
     wire [31:0] tb_pc         = uut.u_cpu.pc;
     wire [31:0] tb_inst       = uut.inst;
     wire [31:0] tb_alu_a      = uut.u_cpu.ALU_A;
@@ -24,10 +26,10 @@ module tb_top;
     wire [31:0] tb_regs [0:31] = uut.u_cpu.u_regfile.registers;
     wire        tb_OF         = uut.u_cpu.OF;
     wire        tb_ZF         = uut.u_cpu.ZF;
-    wire [31:0] tb_mem_wdata  = uut.u_cpu.src2_rdata; // data memory input (write data)
-    wire [31:0] tb_mem_rdata  = uut.data_mem_spo;     // data memory output (read data)
+    wire [31:0] tb_mem_wdata  = uut.u_cpu.src2_rdata; // 数据存储器写入数据
+    wire [31:0] tb_mem_rdata  = uut.data_mem_spo;     // 数据存储器读出数据
 
-    // Instantiate top module
+    // 实例化顶层模块
     top uut (
         .clock(clock), 
         .reset(reset), 
@@ -39,7 +41,7 @@ module tb_top;
         .enable (enable)
     );
 
-    // Clocks (10ns period)
+    // 时钟（周期 10ns）
     initial begin
         clock = 0;
         forever #5 clock = ~clock;
@@ -52,7 +54,7 @@ module tb_top;
 
     integer cycle;
 
-    // --- Logging and waveform ---
+    // --- 日志打印与波形导出 ---
     initial begin
         cycle = 0;
         $dumpfile("top_sim.vcd");
@@ -84,16 +86,16 @@ module tb_top;
     end
     // -----------------
 
-    // Test sequence
+    // 测试时序
     initial begin
-        // init
+        // 初始化
         reset = 1;
         sw = 2'b00;
-        #20; // hold reset 20ns
+        #20; // 保持复位 20ns
         
-        reset = 0; // release reset
+        reset = 0; // 释放复位
         
-        // run long enough to cover program (400ns 足够覆盖所有测试指令)
+        // 运行足够长时间以覆盖测试程序（400ns 可覆盖当前指令）
         #400; 
         
         $display("=======================================================================================\n");

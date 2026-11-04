@@ -27,7 +27,6 @@ webtalk*
 hs_err_pid*
 
 # --- 4. Output Binary Files ---
-*.bit
 *.bin
 *.dcp
 *.mcs

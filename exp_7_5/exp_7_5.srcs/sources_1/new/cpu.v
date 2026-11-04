@@ -1,5 +1,7 @@
 `timescale 1ns / 1ps
 
+// 实验 7.5 单周期 CPU。
+// 在 7.4 基础上增加 lw/sw 访存数据通路。
 module CPU (
     input         clock,
     input         reset,
@@ -11,6 +13,7 @@ module CPU (
     output        OF     
 );
 
+    // 译码与控制信号
     wire [31:0] pc;
     wire [31:0] imm;
     wire [4:0]  src1_raddr;
@@ -22,16 +25,19 @@ module CPU (
     wire        is_lui;
     wire [3:0]  ALU_OP;
     
+    // 寄存器堆读数据
     wire [31:0] src1_rdata;
     wire [31:0] src2_rdata;
     
+    // ALU 输入操作数
     wire [31:0] ALU_A;
     wire [31:0] ALU_B;
     
-    wire        mem_wen;      
-    wire        mem_to_reg;   
-    wire [31:0] mem_rdata;   
-    wire [31:0] wb_data;    
+    // 访存控制与写回选择信号
+    wire        mem_wen;
+    wire        mem_to_reg;
+    wire [31:0] mem_rdata;
+    wire [31:0] wb_data;
 
     fetch_unit u_fetch (
         .clock (clock),
@@ -68,6 +74,9 @@ module CPU (
         .src2_rdata (src2_rdata)
     );
     
+    // 数据存储器：
+    // - 地址取 F[9:2]（按字寻址）
+    // - 写数据来自 rs2
     Data_RAM u_data_ram (
         .clk (clock),
         .we  (mem_wen),
@@ -76,14 +85,23 @@ module CPU (
         .spo (mem_rdata)   
     );
     
+    // 写回多路选择：内存读数或 ALU 结果。
     assign wb_data = mem_to_reg ? mem_rdata : F;
 
-    assign ALU_A = src1_ren ? src1_rdata : 
+    // ALU_A 选择：
+    // - 使用 rs1 时取寄存器值
+    // - LUI 取 0
+    // - AUIPC 取 PC
+    assign ALU_A = src1_ren ? src1_rdata :
                    (inst[6:0] == 7'b0110111) ? 32'b0 : pc;
 
+    // ALU_B 选择：
+    // - R 型取 rs2
+    // - I 型/lw/sw/lui/auipc 取立即数
     assign ALU_B = (src2_ren && !mem_wen) ? src2_rdata : imm;
     
-    assign data_mem_a = F; 
+    // 导出访存观测信号到顶层模块。
+    assign data_mem_a = F;
     assign data_mem_spo = mem_rdata;
 
     ALU u_alu (
@@ -96,4 +114,3 @@ module CPU (
     );
 
 endmodule
-

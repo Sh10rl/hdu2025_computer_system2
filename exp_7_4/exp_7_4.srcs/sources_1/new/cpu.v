@@ -1,5 +1,7 @@
 `timescale 1ns / 1ps
 
+// 实验 7.4 单周期 CPU。
+// 数据通路：取指 -> 译码 -> 寄存器堆 -> ALU -> 写回。
 module CPU (
     input         clock,
     input         reset,
@@ -9,6 +11,7 @@ module CPU (
     output        OF     
 );
 
+    // 译码与控制信号
     wire [31:0] pc;
     wire [31:0] imm;
     wire [4:0]  src1_raddr;
@@ -20,9 +23,11 @@ module CPU (
     wire        is_lui;
     wire [3:0]  ALU_OP;
     
+    // 寄存器堆读数据
     wire [31:0] src1_rdata;
     wire [31:0] src2_rdata;
     
+    // ALU 输入操作数
     wire [31:0] ALU_A;
     wire [31:0] ALU_B;
 
@@ -59,9 +64,14 @@ module CPU (
         .src2_rdata (src2_rdata)
     );
 
-    assign ALU_A = src1_ren ? src1_rdata : 
-                   (inst[6:0] == 7'b0110111) ? 32'b0 : pc; // 三目运算符实现Multiplexer
+    // ALU_A 选择：
+    // - 使用 rs1 时取寄存器值
+    // - LUI 取 0
+    // - AUIPC 取 PC
+    assign ALU_A = src1_ren ? src1_rdata :
+                   (inst[6:0] == 7'b0110111) ? 32'b0 : pc;
 
+    // ALU_B 选择：R 型取寄存器，其余取立即数。
     assign ALU_B = src2_ren ? src2_rdata : imm;
 
     ALU u_alu (
